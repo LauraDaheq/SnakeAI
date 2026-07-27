@@ -224,8 +224,6 @@ Interested in:
 - Automation
 - Game Development
 
-GitHub: **https://github.com/YOUR_USERNAME**
-
 ---
 
 ## 📌 Project Status
