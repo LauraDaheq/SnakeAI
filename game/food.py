@@ -1,65 +1,108 @@
 import random
 import pygame
 
-from game.settings import *
+from game.settings import (
+    WIDTH,
+    HEIGHT,
+    CELL_SIZE,
+    FOOD_RED,
+    GREEN
+)
 
 
 class Food:
 
     def __init__(self):
-        self.position = self.random_position()
+        self.position = (0, 0)
+        self.respawn([])
 
-    def random_position(self):
+    # ======================================
+    # GENERAR COMIDA
+    # ======================================
 
-        x = random.randrange(
-            0,
-            WIDTH // CELL_SIZE
-        ) * CELL_SIZE
+    def respawn(self, occupied):
 
-        y = random.randrange(
-            0,
-            HEIGHT // CELL_SIZE
-        ) * CELL_SIZE
+        while True:
 
-        return (x, y)
+            x = random.randrange(0, WIDTH, CELL_SIZE)
+            y = random.randrange(0, HEIGHT, CELL_SIZE)
 
-    def respawn(self):
-        self.position = self.random_position()
+            if (x, y) not in occupied:
+                self.position = (x, y)
+                return
+
+    # Compatibilidad si el main usa spawn()
+    def spawn(self, occupied):
+        self.respawn(occupied)
+
+    # ======================================
+    # DIBUJAR MANZANA
+    # ======================================
 
     def draw(self, screen):
 
-        x = self.position[0] + CELL_SIZE // 2
-        y = self.position[1] + CELL_SIZE // 2
+        x, y = self.position
 
-        pygame.draw.ellipse(
-            screen,
-            RED,
-            pygame.Rect(x - 10, y - 11, 20, 22)
+        center = (
+            x + CELL_SIZE // 2,
+            y + CELL_SIZE // 2 + 1
         )
 
-        pygame.draw.ellipse(
-            screen,
-            DARK_RED,
-            pygame.Rect(x - 7, y + 5, 14, 5)
-        )
+        radius = CELL_SIZE // 2 - 3
 
+        # sombra
         pygame.draw.circle(
             screen,
-            (255, 150, 150),
-            (x - 5, y - 5),
+            (120, 20, 20),
+            (center[0] + 2, center[1] + 2),
+            radius
+        )
+
+        # manzana
+        pygame.draw.circle(
+            screen,
+            FOOD_RED,
+            center,
+            radius
+        )
+
+        # brillo
+        pygame.draw.circle(
+            screen,
+            (255, 170, 170),
+            (center[0] - 4, center[1] - 4),
             3
         )
 
+        # tallo
         pygame.draw.line(
             screen,
-            (90, 50, 20),
-            (x, y - 11),
-            (x + 3, y - 18),
-            3
+            (80, 45, 20),
+            (center[0], center[1] - radius),
+            (center[0], center[1] - radius - 6),
+            2
         )
 
+        # hoja
         pygame.draw.ellipse(
             screen,
-            (40, 180, 60),
-            pygame.Rect(x + 2, y - 18, 8, 5)
+            GREEN,
+            (
+                center[0] + 1,
+                center[1] - radius - 7,
+                8,
+                5
+            )
         )
+
+    # ======================================
+    # POSICIÓN
+    # ======================================
+
+    @property
+    def x(self):
+        return self.position[0]
+
+    @property
+    def y(self):
+        return self.position[1]

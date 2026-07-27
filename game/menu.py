@@ -1,5 +1,21 @@
 import pygame
 
+from game.settings import *
+from game.difficulty_menu import DifficultyMenu
+from game.mode_menu import ModeMenu
+from game.solo_menu import SoloMenu
+from game.duo_menu import DuoMenu
+
+
+COLORS = [
+
+    ("Verde", (40,210,70)),
+    ("Azul", (80,180,255)),
+    ("Rosado", (255,140,210)),
+    ("Rojo", (235,60,60))
+
+]
+
 
 class Menu:
 
@@ -8,546 +24,648 @@ class Menu:
 
         self.screen = pygame.display.get_surface()
 
-
-        self.WIDTH = self.screen.get_width()
-        self.HEIGHT = self.screen.get_height()
+        self.clock = pygame.time.Clock()
 
 
-
-        self.title_font = pygame.font.SysFont(
+        self.big = pygame.font.SysFont(
             "arial",
-            75,
+            60,
             bold=True
         )
 
 
         self.font = pygame.font.SysFont(
             "arial",
-            32
+            34
         )
 
 
-        self.small_font = pygame.font.SysFont(
+        self.small = pygame.font.SysFont(
             "arial",
             22
         )
 
 
-
         self.name = ""
 
+        self.color_index = 0
 
-
-        self.colors = [
-
-            ("Verde",(45,220,60)),
-
-            ("Azul",(40,120,255)),
-
-            ("Rojo",(230,50,50)),
-
-            ("Rosa",(255,150,180))
-
-        ]
-
-
-        self.color_selected = 0
-
-
-        self.mode = "Solo"
-
+        self.state = "main"
 
         self.running = True
 
+        self.result = None
+
+
+        self.play_button = None
+        self.controls_button = None
+        self.exit_button = None
+        self.start_button = None
 
 
 
+    # ==========================
+    # FONDO
+    # ==========================
 
-    # ======================
-    # BOTONES
-    # ======================
+    def draw_background(self):
 
-    def draw_button(
-        self,
-        text,
-        rect,
-        mouse,
-        selected=False
-    ):
+        self.screen.fill(
+            (100,72,46)
+        )
 
 
-        if rect.collidepoint(mouse):
+        for x in range(
+            0,
+            WIDTH,
+            CELL_SIZE
+        ):
 
-            color = (90,90,100)
+            pygame.draw.line(
+                self.screen,
+                (118,88,58),
+                (x,0),
+                (x,HEIGHT)
+            )
 
-        else:
 
-            color = (55,55,65)
+        for y in range(
+            0,
+            HEIGHT,
+            CELL_SIZE
+        ):
+
+            pygame.draw.line(
+                self.screen,
+                (118,88,58),
+                (0,y),
+                (WIDTH,y)
+            )
 
 
 
-        if selected:
+    # ==========================
+    # TITULO
+    # ==========================
 
-            color = (40,130,70)
+    def draw_title(self,text):
 
+        shadow = self.big.render(
+            text,
+            True,
+            (30,30,30)
+        )
+
+
+        self.screen.blit(
+            shadow,
+            (
+                WIDTH//2-shadow.get_width()//2+4,
+                54
+            )
+        )
+
+
+        title = self.big.render(
+            text,
+            True,
+            WHITE
+        )
+
+
+        self.screen.blit(
+            title,
+            (
+                WIDTH//2-title.get_width()//2,
+                50
+            )
+        )
+
+
+
+    # ==========================
+    # BOTON
+    # ==========================
+
+    def draw_button(self,text,y):
+
+        rect = pygame.Rect(
+            WIDTH//2-180,
+            y,
+            360,
+            60
+        )
+
+
+        color = (
+            160,
+            120,
+            70
+        )
+
+
+        if rect.collidepoint(
+            pygame.mouse.get_pos()
+        ):
+
+            color = (
+                235,
+                190,
+                80
+            )
 
 
         pygame.draw.rect(
             self.screen,
             color,
             rect,
-            border_radius=18
+            border_radius=12
         )
-
 
 
         pygame.draw.rect(
             self.screen,
-            (220,220,220),
+            BLACK,
             rect,
-            2,
-            border_radius=18
+            3,
+            border_radius=12
         )
 
 
-
-        label = self.font.render(
+        img = self.font.render(
             text,
             True,
-            (255,255,255)
+            BLACK
         )
 
 
         self.screen.blit(
-            label,
+            img,
             (
-                rect.centerx-label.get_width()/2,
-                rect.centery-label.get_height()/2
+                rect.centerx-img.get_width()//2,
+                rect.centery-img.get_height()//2
+            )
+        )
+
+
+        return rect
+
+    # ==========================
+    # MENU PRINCIPAL
+    # ==========================
+
+    def draw_main(self):
+
+        self.draw_background()
+
+
+        self.draw_title(
+            "SNAKE AI"
+        )
+
+
+        self.play_button = self.draw_button(
+            "JUGAR",
+            220
+        )
+
+
+        self.controls_button = self.draw_button(
+            "CONTROLES",
+            310
+        )
+
+
+        self.exit_button = self.draw_button(
+            "SALIR",
+            400
+        )
+
+
+
+    def handle_main(self,event):
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+            if event.button == 1:
+
+                mouse = pygame.mouse.get_pos()
+
+
+                if self.play_button.collidepoint(mouse):
+
+                    self.state = "player"
+
+
+
+                elif self.controls_button.collidepoint(mouse):
+
+                    self.state = "controls"
+
+
+
+                elif self.exit_button.collidepoint(mouse):
+
+                    pygame.quit()
+
+                    raise SystemExit
+
+
+
+
+    # ==========================
+    # MENU JUGADOR
+    # ==========================
+
+    def draw_player(self):
+
+        self.draw_background()
+
+
+        self.draw_title(
+            "JUGADOR"
+        )
+
+
+        text = self.font.render(
+            "Escribe tu nombre",
+            True,
+            WHITE
+        )
+
+
+        self.screen.blit(
+            text,
+            (
+                WIDTH//2-text.get_width()//2,
+                140
+            )
+        )
+
+
+        box = pygame.Rect(
+            WIDTH//2-170,
+            200,
+            340,
+            55
+        )
+
+
+        pygame.draw.rect(
+            self.screen,
+            WHITE,
+            box,
+            border_radius=8
+        )
+
+
+        pygame.draw.rect(
+            self.screen,
+            BLACK,
+            box,
+            2,
+            border_radius=8
+        )
+
+
+        name = self.font.render(
+            self.name,
+            True,
+            BLACK
+        )
+
+
+        self.screen.blit(
+            name,
+            (
+                box.x+10,
+                box.y+10
             )
         )
 
 
 
+        title = self.font.render(
+            "Selecciona color",
+            True,
+            WHITE
+        )
 
 
-    # ======================
-    # MENU PRINCIPAL
-    # ======================
+        self.screen.blit(
+            title,
+            (
+                WIDTH//2-title.get_width()//2,
+                300
+            )
+        )
+
+
+
+        self.color_buttons=[]
+
+
+        start_x = WIDTH//2-170
+
+
+        for i,(name,color) in enumerate(COLORS):
+
+            rect = pygame.Rect(
+                start_x+i*90,
+                360,
+                55,
+                55
+            )
+
+
+            self.color_buttons.append(rect)
+
+
+            pygame.draw.rect(
+                self.screen,
+                color,
+                rect,
+                border_radius=10
+            )
+
+
+            if i == self.color_index:
+
+                pygame.draw.rect(
+                    self.screen,
+                    YELLOW,
+                    rect,
+                    4,
+                    border_radius=10
+                )
+
+
+
+        self.start_button = self.draw_button(
+            "INICIAR",
+            520
+        )
+
+
+
+    def handle_player(self,event):
+
+
+        if event.type == pygame.KEYDOWN:
+
+
+            if event.key == pygame.K_BACKSPACE:
+
+                self.name = self.name[:-1]
+
+
+            elif len(self.name)<15:
+
+                if event.unicode.isprintable():
+
+                    self.name += event.unicode
+
+
+
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+
+            if event.button == 1:
+
+
+                mouse = pygame.mouse.get_pos()
+
+
+
+                for i,rect in enumerate(self.color_buttons):
+
+
+                    if rect.collidepoint(mouse):
+
+                        self.color_index=i
+
+
+
+
+                if self.start_button.collidepoint(mouse):
+
+
+                    if self.name.strip()=="":
+                        
+                        self.name="Jugador"
+
+
+
+                    mode_menu = ModeMenu()
+
+                    tipo = mode_menu.run()
+
+
+                    if tipo == "Solo":
+
+                        solo = SoloMenu()
+
+                        mode = solo.run()
+
+
+                    elif tipo == "Duo":
+
+                        duo = DuoMenu()
+
+                        mode = duo.run()
+
+
+
+                    difficulty_menu = DifficultyMenu()
+
+                    difficulty = difficulty_menu.run()
+
+
+
+                    self.result = (
+
+                        self.name,
+
+                        COLORS[self.color_index][1],
+
+                        mode,
+
+                        difficulty
+
+                    )
+
+
+                    self.running=False
+
+    # ==========================
+    # CONTROLES
+    # ==========================
+
+    def draw_controls(self):
+
+        self.draw_background()
+
+
+        self.draw_title(
+            "CONTROLES"
+        )
+
+
+        lines = [
+
+            "Jugador 1",
+            "W A S D",
+
+            "",
+
+            "Jugador 2",
+            "Flechas",
+
+
+        ]
+
+
+        y = 180
+
+
+        for line in lines:
+
+
+            img = self.font.render(
+                line,
+                True,
+                WHITE
+            )
+
+
+            self.screen.blit(
+                img,
+                (
+                    WIDTH//2-img.get_width()//2,
+                    y
+                )
+            )
+
+
+            y += 45
+
+
+
+        self.back_button = self.draw_button(
+            "VOLVER",
+            580
+        )
+
+
+
+    def handle_controls(self,event):
+
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+
+            if event.button == 1:
+
+
+                if self.back_button.collidepoint(
+                    pygame.mouse.get_pos()
+                ):
+
+                    self.state = "main"
+
+
+
+
+
+    # ==========================
+    # EJECUTAR MENU
+    # ==========================
 
     def run(self):
 
-
-        clock = pygame.time.Clock()
-
+        self.running=True
 
 
         while self.running:
 
 
-            mouse = pygame.mouse.get_pos()
-
+            self.clock.tick(60)
 
 
             for event in pygame.event.get():
 
 
-
                 if event.type == pygame.QUIT:
 
                     pygame.quit()
-                    exit()
+
+                    raise SystemExit
 
 
 
-
-                # teclado nombre
+                # ESC
 
                 if event.type == pygame.KEYDOWN:
 
 
-                    if event.key == pygame.K_BACKSPACE:
+                    if event.key == pygame.K_ESCAPE:
 
 
-                        self.name = self.name[:-1]
+                        if self.state != "main":
 
+                            self.state="main"
 
 
-                    elif event.key == pygame.K_RETURN:
+                        else:
 
+                            pygame.quit()
 
-                        if self.name == "":
+                            raise SystemExit
 
-                            self.name="Jugador"
 
 
-                        self.running=False
+                # ESTADOS
 
+                if self.state == "main":
 
+                    self.handle_main(event)
 
-                    elif len(self.name)<12:
 
+                elif self.state == "player":
 
-                        if event.unicode.isprintable():
+                    self.handle_player(event)
 
-                            self.name += event.unicode
 
+                elif self.state == "controls":
 
+                    self.handle_controls(event)
 
 
 
-                # clicks
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-
-
-
-                    # colores
-
-                    for i in range(4):
-
-
-                        circle = pygame.Rect(
-
-                            320+i*90,
-                            330,
-                            55,
-                            55
-                        )
-
-
-
-                        if circle.collidepoint(event.pos):
-
-                            self.color_selected=i
-
-
-
-
-
-                    # modo
-
-                    solo_button = pygame.Rect(
-                        250,
-                        470,
-                        220,
-                        65
-                    )
-
-
-                    multi_button = pygame.Rect(
-                        530,
-                        470,
-                        220,
-                        65
-                    )
-
-
-
-                    if solo_button.collidepoint(event.pos):
-
-                        self.mode="Solo"
-
-
-
-                    if multi_button.collidepoint(event.pos):
-
-                        self.mode="Multijugador"
-
-
-
-
-
-                    # jugar
-
-                    play_button = pygame.Rect(
-                        360,
-                        570,
-                        280,
-                        75
-                    )
-
-
-
-                    if play_button.collidepoint(event.pos):
-
-
-                        if self.name=="":
-
-                            self.name="Jugador"
-
-
-
-                        self.running=False
-
-
-
-
-
-            # ======================
             # DIBUJO
-            # ======================
 
+            if self.state == "main":
 
-            # fondo
+                self.draw_main()
 
-            self.screen.fill(
-                (20,80,55)
-            )
 
 
+            elif self.state == "player":
 
-            # panel
+                self.draw_player()
 
-            pygame.draw.rect(
-                self.screen,
-                (30,30,40),
-                pygame.Rect(
-                    150,
-                    25,
-                    700,
-                    650
-                ),
-                border_radius=35
-            )
 
 
+            elif self.state == "controls":
 
+                self.draw_controls()
 
-            # titulo
 
-            title=self.title_font.render(
-                "SNAKE AI",
-                True,
-                (255,255,255)
-            )
 
+            pygame.display.flip()
 
-            self.screen.blit(
-                title,
-                (
-                    300,
-                    60
-                )
-            )
 
 
-
-
-            # nombre
-
-            name_label=self.font.render(
-                "Nombre",
-                True,
-                (255,255,255)
-            )
-
-
-            self.screen.blit(
-                name_label,
-                (
-                    240,
-                    170
-                )
-            )
-
-
-
-            pygame.draw.rect(
-                self.screen,
-                (55,55,65),
-                pygame.Rect(
-                    240,
-                    215,
-                    420,
-                    55
-                ),
-                border_radius=12
-            )
-
-
-
-            name=self.font.render(
-                self.name,
-                True,
-                self.colors[self.color_selected][1]
-            )
-
-
-            self.screen.blit(
-                name,
-                (
-                    260,
-                    225
-                )
-            )
-
-
-
-
-
-            # colores
-
-            color_text=self.font.render(
-                "Color",
-                True,
-                (255,255,255)
-            )
-
-
-            self.screen.blit(
-                color_text,
-                (
-                    240,
-                    300
-                )
-            )
-
-
-
-            for i,c in enumerate(self.colors):
-
-
-                x=340+i*90
-                y=345
-
-
-
-                pygame.draw.circle(
-                    self.screen,
-                    c[1],
-                    (x,y),
-                    25
-                )
-
-
-
-                if i==self.color_selected:
-
-
-                    pygame.draw.circle(
-                        self.screen,
-                        (255,255,255),
-                        (x,y),
-                        33,
-                        3
-                    )
-
-
-
-                txt=self.small_font.render(
-                    c[0],
-                    True,
-                    (255,255,255)
-                )
-
-
-                self.screen.blit(
-                    txt,
-                    (
-                        x-txt.get_width()/2,
-                        380
-                    )
-                )
-
-
-
-
-
-            # preview serpiente
-
-            preview=self.colors[self.color_selected][1]
-
-
-
-            pygame.draw.circle(
-                self.screen,
-                preview,
-                (700,335),
-                18
-            )
-
-
-            pygame.draw.circle(
-                self.screen,
-                preview,
-                (670,335),
-                15
-            )
-
-
-            pygame.draw.circle(
-                self.screen,
-                preview,
-                (645,335),
-                12
-            )
-
-
-
-
-
-            # botones modo
-
-
-            self.draw_button(
-                "🐍 Solo",
-                pygame.Rect(
-                    250,
-                    470,
-                    220,
-                    65
-                ),
-                mouse,
-                self.mode=="Solo"
-            )
-
-
-
-            self.draw_button(
-                "🐍🐍 Duo",
-                pygame.Rect(
-                    530,
-                    470,
-                    220,
-                    65
-                ),
-                mouse,
-                self.mode=="Multijugador"
-            )
-
-
-
-
-
-            self.draw_button(
-                "JUGAR",
-                pygame.Rect(
-                    360,
-                    570,
-                    280,
-                    75
-                ),
-                mouse
-            )
-
-
-
-
-
-            pygame.display.update()
-
-
-            clock.tick(60)
-
-
-
-
-        return (
-
-            self.name,
-
-            self.colors[self.color_selected][1],
-
-            self.mode
-
-        )
+        return self.result

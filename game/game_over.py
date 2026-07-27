@@ -1,5 +1,7 @@
 import pygame
 
+from game.settings import *
+
 
 class GameOver:
 
@@ -8,14 +10,12 @@ class GameOver:
 
         self.screen = pygame.display.get_surface()
 
-
-        self.width = self.screen.get_width()
-        self.height = self.screen.get_height()
+        self.clock = pygame.time.Clock()
 
 
-        self.title_font = pygame.font.SysFont(
+        self.big = pygame.font.SysFont(
             "arial",
-            75,
+            60,
             bold=True
         )
 
@@ -26,26 +26,40 @@ class GameOver:
         )
 
 
+        self.running = True
 
-    # -------------------------
+        self.result = None
+
+
+        self.restart_button = None
+        self.menu_button = None
+        self.exit_button = None
+
+
+
+    # ==================================
     # BOTON
-    # -------------------------
+    # ==================================
 
-    def draw_button(
-        self,
-        text,
-        rect,
-        mouse
-    ):
+    def button(self,text,y):
+
+        rect = pygame.Rect(
+            WIDTH//2-180,
+            y,
+            360,
+            60
+        )
+
+
+        mouse = pygame.mouse.get_pos()
+
+
+        color = (160,120,70)
 
 
         if rect.collidepoint(mouse):
 
-            color = (90,90,100)
-
-        else:
-
-            color = (50,50,60)
+            color = (235,190,80)
 
 
 
@@ -53,58 +67,167 @@ class GameOver:
             self.screen,
             color,
             rect,
-            border_radius=18
+            border_radius=12
         )
 
 
         pygame.draw.rect(
             self.screen,
-            (220,220,220),
+            BLACK,
             rect,
-            2,
-            border_radius=18
+            3,
+            border_radius=12
         )
 
 
-
-        label = self.font.render(
+        img = self.font.render(
             text,
             True,
-            (255,255,255)
+            BLACK
         )
 
 
         self.screen.blit(
-            label,
+            img,
             (
-                rect.centerx - label.get_width()/2,
-                rect.centery - label.get_height()/2
+                rect.centerx-img.get_width()//2,
+                rect.centery-img.get_height()//2
+            )
+        )
+
+
+        return rect
+
+
+
+    # ==================================
+    # DIBUJAR
+    # ==================================
+
+    def draw(self,winner):
+
+
+        self.screen.fill(
+            (30,30,30)
+        )
+
+
+        title = self.big.render(
+            winner,
+            True,
+            WHITE
+        )
+
+
+        self.screen.blit(
+            title,
+            (
+                WIDTH//2-title.get_width()//2,
+                80
             )
         )
 
 
 
+        self.restart_button = self.button(
+            "REINICIAR",
+            250
+        )
 
 
-    # -------------------------
-    # PANTALLA GAME OVER
-    # -------------------------
-
-    def run(
-        self,
-        winner_text
-    ):
+        self.menu_button = self.button(
+            "MENU PRINCIPAL",
+            340
+        )
 
 
-        clock = pygame.time.Clock()
-
-
-
-        while True:
+        self.exit_button = self.button(
+            "SALIR",
+            430
+        )
 
 
 
-            mouse = pygame.mouse.get_pos()
+
+
+    # ==================================
+    # EVENTOS
+    # ==================================
+
+    def events(self,event):
+
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+
+            if event.button == 1:
+
+
+                mouse = pygame.mouse.get_pos()
+
+
+
+                if self.restart_button.collidepoint(mouse):
+
+                    self.result = "restart"
+
+                    self.running=False
+
+
+
+                elif self.menu_button.collidepoint(mouse):
+
+                    self.result = "menu"
+
+                    self.running=False
+
+
+
+                elif self.exit_button.collidepoint(mouse):
+
+                    self.result = "exit"
+
+                    self.running=False
+
+
+
+
+
+        if event.type == pygame.KEYDOWN:
+
+
+            if event.key == pygame.K_r:
+
+                self.result="restart"
+
+                self.running=False
+
+
+
+            elif event.key == pygame.K_ESCAPE:
+
+                self.result="exit"
+
+                self.running=False
+
+
+
+
+
+    # ==================================
+    # RUN
+    # ==================================
+
+    def run(self,winner):
+
+
+        self.running=True
+
+
+        while self.running:
+
+
+            self.clock.tick(60)
 
 
 
@@ -114,193 +237,21 @@ class GameOver:
                 if event.type == pygame.QUIT:
 
                     pygame.quit()
-                    exit()
 
+                    raise SystemExit
 
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
 
+                self.events(event)
 
 
-                    restart_button = pygame.Rect(
 
-                        260,
-                        480,
-                        220,
-                        75
+            self.draw(winner)
 
-                    )
 
 
+            pygame.display.flip()
 
-                    menu_button = pygame.Rect(
 
-                        520,
-                        480,
-                        220,
-                        75
 
-                    )
-
-
-
-                    if restart_button.collidepoint(
-                        event.pos
-                    ):
-
-                        return "restart"
-
-
-
-
-                    if menu_button.collidepoint(
-                        event.pos
-                    ):
-
-                        return "menu"
-
-
-
-
-
-
-            # -----------------
-            # DIBUJO
-            # -----------------
-
-
-            # fondo
-
-            self.screen.fill(
-                (20,80,55)
-            )
-
-
-
-            # panel
-
-            pygame.draw.rect(
-
-                self.screen,
-
-                (30,30,40),
-
-                pygame.Rect(
-
-                    150,
-                    100,
-                    700,
-                    500
-
-                ),
-
-                border_radius=35
-
-            )
-
-
-
-
-            title = self.title_font.render(
-
-                "GAME OVER",
-
-                True,
-
-                (255,80,80)
-
-            )
-
-
-            self.screen.blit(
-
-                title,
-
-                (
-
-                    260,
-                    170
-
-                )
-
-            )
-
-
-
-
-
-            winner = self.font.render(
-
-                winner_text,
-
-                True,
-
-                (255,255,255)
-
-            )
-
-
-            self.screen.blit(
-
-                winner,
-
-                (
-
-                    500 - winner.get_width()/2,
-
-                    300
-
-                )
-
-            )
-
-
-
-
-
-            self.draw_button(
-
-                "REINICIAR",
-
-                pygame.Rect(
-
-                    260,
-                    480,
-                    220,
-                    75
-
-                ),
-
-                mouse
-
-            )
-
-
-
-
-            self.draw_button(
-
-                "MENU",
-
-                pygame.Rect(
-
-                    520,
-                    480,
-                    220,
-                    75
-
-                ),
-
-                mouse
-
-            )
-
-
-
-
-
-            pygame.display.update()
-
-
-
-            clock.tick(60)
+        return self.result
